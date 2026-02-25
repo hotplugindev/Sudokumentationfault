@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="16" fill="#0d0d0d"/>
+  <g stroke="#6c63ff" fill="none">
+    <!-- Outer border -->
+    <rect x="14" y="14" width="100" height="100" rx="6" stroke-width="4"/>
+    <!-- Thick 3x3 box dividers -->
+    <line x1="47.33" y1="14" x2="47.33" y2="114" stroke-width="3"/>
+    <line x1="80.66" y1="14" x2="80.66" y2="114" stroke-width="3"/>
+    <line x1="14" y1="47.33" x2="114" y2="47.33" stroke-width="3"/>
+    <line x1="14" y1="80.66" x2="114" y2="80.66" stroke-width="3"/>
+    <!-- Thin cell dividers - vertical -->
+    <line x1="25.11" y1="14" x2="25.11" y2="114" stroke-width="1" opacity="0.3"/>
+    <line x1="36.22" y1="14" x2="36.22" y2="114" stroke-width="1" opacity="0.3"/>
+    <line x1="58.44" y1="14" x2="58.44" y2="114" stroke-width="1" opacity="0.3"/>
+    <line x1="69.55" y1="14" x2="69.55" y2="114" stroke-width="1" opacity="0.3"/>
+    <line x1="91.77" y1="14" x2="91.77" y2="114" stroke-width="1" opacity="0.3"/>
+    <line x1="102.88" y1="14" x2="102.88" y2="114" stroke-width="1" opacity="0.3"/>
+    <!-- Thin cell dividers - horizontal -->
+    <line x1="14" y1="25.11" x2="114" y2="25.11" stroke-width="1" opacity="0.3"/>
+    <line x1="14" y1="36.22" x2="114" y2="36.22" stroke-width="1" opacity="0.3"/>
+    <line x1="14" y1="58.44" x2="114" y2="58.44" stroke-width="1" opacity="0.3"/>
+    <line x1="14" y1="69.55" x2="114" y2="69.55" stroke-width="1" opacity="0.3"/>
+    <line x1="14" y1="91.77" x2="114" y2="91.77" stroke-width="1" opacity="0.3"/>
+    <line x1="14" y1="102.88" x2="114" y2="102.88" stroke-width="1" opacity="0.3"/>
+  </g>
+  <!-- Accent numbers -->
+  <g font-family="sans-serif" font-weight="700" font-size="15" fill="#e0e0e0" text-anchor="middle" dominant-baseline="central">
+    <text x="30.67" y="25.11">5</text>
+    <text x="64" y="25.11" fill="#6c63ff">3</text>
+    <text x="97.33" y="25.11">7</text>
+    <text x="19.56" y="47.33" fill="#6c63ff">6</text>
+    <text x="64" y="47.33">9</text>
+    <text x="97.33" y="58.44" fill="#6c63ff">8</text>
+    <text x="30.67" y="69.55">4</text>
+    <text x="75" y="80.66" fill="#6c63ff">1</text>
+    <text x="19.56" y="97.33">2</text>
+    <text x="64" y="102.88" fill="#6c63ff">7</text>
+    <text x="108.44" y="91.77">9</text>
+  </g>
+</svg>

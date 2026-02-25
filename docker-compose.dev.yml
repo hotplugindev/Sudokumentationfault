@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sudoku-postgres-dev
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=sudoku
+      - POSTGRES_PASSWORD=sudoku
+      - POSTGRES_DB=sudoku
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sudoku -d sudoku"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: sudoku-backend-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/src:/app/src
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - JWT_SECRET=dev-secret-do-not-use-in-production
+      - CORS_ORIGIN=http://localhost:5173
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=sudoku
+      - DB_USER=sudoku
+      - DB_PASSWORD=sudoku
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: sudoku-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - /app/node_modules
+    environment:
+      - API_PROXY_TARGET=http://backend:3000
+      - NODE_OPTIONS=--max-http-header-size=65536
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata_dev:
