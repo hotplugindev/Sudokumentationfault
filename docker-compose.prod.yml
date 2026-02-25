@@ -38,9 +38,9 @@ services:
       - DB_NAME=${DB_NAME:-sudoku}
       - DB_USER=${DB_USER:-sudoku}
       - DB_PASSWORD=${DB_PASSWORD:-sudoku}
-    # depends_on:
-    #   postgres:
-    #     condition: service_healthy
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - internal
     restart: always
