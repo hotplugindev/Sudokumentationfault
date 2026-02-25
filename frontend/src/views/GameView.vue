@@ -59,6 +59,15 @@ const difficultyColors: Record<string, string> = {
                     </span>
                 </div>
                 <div class="info-item">
+                    <span class="info-label">Mode</span>
+                    <span
+                        class="info-value mode-badge"
+                        :class="{ 'mode-badge--pencil': game.pencilMode }"
+                    >
+                        {{ game.pencilMode ? "Notes" : "Normal" }}
+                    </span>
+                </div>
+                <div class="info-item">
                     <span class="info-label">Time</span>
                     <span class="info-value mono">{{
                         game.formattedTime
@@ -175,6 +184,15 @@ const difficultyColors: Record<string, string> = {
 
 .mono {
     font-family: var(--font-mono);
+}
+
+.mode-badge {
+    text-transform: capitalize;
+    color: var(--text-secondary);
+}
+
+.mode-badge--pencil {
+    color: var(--accent);
 }
 
 /* ── Layout ──────────────────────────────────────────────────────────── */

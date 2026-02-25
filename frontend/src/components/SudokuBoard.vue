@@ -14,10 +14,21 @@ function handleKeyDown(e: KeyboardEvent) {
 
     const { row, col } = game.selectedCell;
 
+    // Toggle pencil mode with N
+    if (e.key === "n" || e.key === "N") {
+        e.preventDefault();
+        game.togglePencilMode();
+        return;
+    }
+
     // Number keys 1-9
     if (e.key >= "1" && e.key <= "9") {
         const value = parseInt(e.key, 10);
-        if (!game.locked[row]?.[col]) {
+        if (game.locked[row]?.[col]) return;
+
+        if (game.pencilMode) {
+            game.toggleNote(row, col, value);
+        } else {
             game.makeMove(row, col, value);
         }
         return;
@@ -25,7 +36,13 @@ function handleKeyDown(e: KeyboardEvent) {
 
     // Delete / Backspace to erase
     if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
-        if (!game.locked[row]?.[col]) {
+        if (game.locked[row]?.[col]) return;
+
+        if (game.pencilMode) {
+            // In pencil mode, clear all notes for this cell
+            game.clearNotes(row, col);
+        } else {
+            // In normal mode, erase the placed number
             game.makeMove(row, col, 0);
         }
         return;
