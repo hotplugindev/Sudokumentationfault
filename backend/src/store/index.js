@@ -191,6 +191,46 @@ async function getLeaderboard(difficulty = null, limit = 50) {
   return rows;
 }
 
+async function getDailyLeaderboard(difficulty = null, limit = 50) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayTimestamp = today.getTime();
+
+  let text;
+  let params;
+
+  if (difficulty) {
+    text = `SELECT game_id   AS "gameId",
+                   user_id   AS "userId",
+                   username,
+                   difficulty,
+                   time,
+                   mistakes,
+                   completed_at AS "completedAt"
+            FROM leaderboard
+            WHERE difficulty = $1 AND completed_at >= $2
+            ORDER BY time ASC
+            LIMIT $3`;
+    params = [difficulty, todayTimestamp, limit];
+  } else {
+    text = `SELECT game_id   AS "gameId",
+                   user_id   AS "userId",
+                   username,
+                   difficulty,
+                   time,
+                   mistakes,
+                   completed_at AS "completedAt"
+            FROM leaderboard
+            WHERE completed_at >= $1
+            ORDER BY time ASC
+            LIMIT $2`;
+    params = [todayTimestamp, limit];
+  }
+
+  const { rows } = await db.query(text, params);
+  return rows;
+}
+
 async function getUserStats(userId) {
   /* Total played / completed / mistakes from the games table */
   const summaryResult = await db.query(
@@ -251,5 +291,6 @@ module.exports = {
   updateGame,
   addLeaderboardEntry,
   getLeaderboard,
+  getDailyLeaderboard,
   getUserStats,
 };

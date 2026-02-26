@@ -44,7 +44,7 @@ const isSameValue = computed(() => {
 });
 
 const isInCompletedRegion = computed(() => 
-    game.isCellInCompletedRegion(props.row, props.col)
+    game.greyOutCompleted && game.isCellInCompletedRegion(props.row, props.col)
 );
 
 /* Right & bottom thick borders for 3x3 box separation */

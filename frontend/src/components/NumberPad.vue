@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useGameStore } from "@/stores/game";
 
 const game = useGameStore();
@@ -30,6 +31,27 @@ function eraseNotes() {
     if (game.locked[row]?.[col]) return;
     game.clearNotes(row, col);
 }
+
+// Count how many of each number are missing from the board
+function getMissingCount(num: number): number {
+    let count = 0;
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            if (game.current[row]?.[col] === num) {
+                count++;
+            }
+        }
+    }
+    return 9 - count;
+}
+
+const missingCounts = computed(() => {
+    const counts: Record<number, number> = {};
+    for (let n = 1; n <= 9; n++) {
+        counts[n] = getMissingCount(n);
+    }
+    return counts;
+});
 </script>
 
 <template>
@@ -59,6 +81,31 @@ function eraseNotes() {
             <span class="pencil-hint">N</span>
         </button>
 
+        <!-- Grey-out completed toggle -->
+        <button
+            class="pencil-toggle"
+            :class="{ 'pencil-toggle--active': game.greyOutCompleted }"
+            :disabled="!game.isPlaying"
+            @click="game.toggleGreyOutCompleted()"
+        >
+            <svg
+                class="pencil-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9 9h6v6H9z" />
+            </svg>
+            <span class="pencil-label">{{
+                game.greyOutCompleted ? "Grey-out ON" : "Grey-out OFF"
+            }}</span>
+            <span class="pencil-hint">G</span>
+        </button>
+
         <!-- Number pad -->
         <div class="numpad-section">
             <span class="section-label">Numbers</span>
@@ -71,7 +118,8 @@ function eraseNotes() {
                     :disabled="!game.isPlaying"
                     @click="game.pencilMode ? placeNote(n) : placeNumber(n)"
                 >
-                    {{ n }}
+                    <span class="numpad-value">{{ n }}</span>
+                    <span v-if="missingCounts[n] > 0" class="numpad-counter">{{ missingCounts[n] }}</span>
                 </button>
                 <button
                     class="numpad-btn numpad-erase"
@@ -207,6 +255,7 @@ function eraseNotes() {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
     background: var(--bg-tertiary);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -216,6 +265,27 @@ function eraseNotes() {
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition);
+}
+
+.numpad-value {
+    display: block;
+}
+
+.numpad-counter {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 600;
+    border-radius: 3px;
+    line-height: 1;
 }
 
 .numpad-btn:hover:not(:disabled) {

@@ -24,9 +24,11 @@ export const useGameStore = defineStore("game", () => {
   const elapsed = ref(0);
   const selectedCell = ref<{ row: number; col: number } | null>(null);
   const completedAt = ref<number | null>(null);
+  const isPaused = ref(false);
 
   /* Pencil / notes — purely client-side */
   const pencilMode = ref(false);
+  const greyOutCompleted = ref(true);
   const notes = reactive<Set<number>[][]>(createEmptyNotes());
 
   /* ── Timer ─────────────────────────────────────────────────────────── */
@@ -36,7 +38,7 @@ export const useGameStore = defineStore("game", () => {
   function startTimer() {
     stopTimer();
     timerInterval = setInterval(() => {
-      if (status.value === "in_progress") {
+      if (status.value === "in_progress" && !isPaused.value) {
         elapsed.value++;
       }
     }, 1000);
@@ -146,6 +148,10 @@ export const useGameStore = defineStore("game", () => {
     pencilMode.value = !pencilMode.value;
   }
 
+  function toggleGreyOutCompleted() {
+    greyOutCompleted.value = !greyOutCompleted.value;
+  }
+
   /* ── Actions ───────────────────────────────────────────────────────── */
 
   async function newGame(diff: Difficulty) {
@@ -162,6 +168,7 @@ export const useGameStore = defineStore("game", () => {
     selectedCell.value = null;
     completedAt.value = null;
     pencilMode.value = false;
+    isPaused.value = false;
     clearAllNotes();
 
     startTimer();
@@ -210,6 +217,24 @@ export const useGameStore = defineStore("game", () => {
     selectedCell.value = { row, col };
   }
 
+  function pauseGame() {
+    if (status.value === "in_progress" && !isPaused.value) {
+      isPaused.value = true;
+    }
+  }
+
+  function resumeGame() {
+    if (status.value === "in_progress" && isPaused.value) {
+      isPaused.value = false;
+    }
+  }
+
+  function togglePause() {
+    if (status.value === "in_progress") {
+      isPaused.value = !isPaused.value;
+    }
+  }
+
   function reset() {
     stopTimer();
     gameId.value = null;
@@ -221,6 +246,7 @@ export const useGameStore = defineStore("game", () => {
     selectedCell.value = null;
     completedAt.value = null;
     pencilMode.value = false;
+    isPaused.value = false;
     clearAllNotes();
   }
 
@@ -235,6 +261,7 @@ export const useGameStore = defineStore("game", () => {
     selectedCell,
     completedAt,
     pencilMode,
+    greyOutCompleted,
     notes,
     formattedTime,
     isPlaying,
@@ -248,6 +275,11 @@ export const useGameStore = defineStore("game", () => {
     clearNotes,
     getNotes,
     togglePencilMode,
+    toggleGreyOutCompleted,
     isCellInCompletedRegion,
+    isPaused,
+    pauseGame,
+    resumeGame,
+    togglePause,
   };
 });

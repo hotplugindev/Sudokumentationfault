@@ -77,12 +77,31 @@ const difficultyColors: Record<string, string> = {
 
             <!-- Board + controls -->
             <div class="game-layout">
-                <SudokuBoard />
+                <div class="board-container">
+                    <SudokuBoard />
+                    
+                    <!-- Pause overlay -->
+                    <Transition name="fade">
+                        <div v-if="game.isPaused" class="pause-overlay" @click="game.resumeGame()">
+                            <div class="pause-content">
+                                <div class="pause-icon">⏸</div>
+                                <h3>Game Paused</h3>
+                                <p>Click to resume</p>
+                            </div>
+                        </div>
+                    </Transition>
+                </div>
 
                 <div class="game-sidebar">
                     <NumberPad />
 
                     <div class="game-actions" v-if="game.isPlaying">
+                        <button 
+                            class="btn btn-secondary btn-sm" 
+                            @click="game.togglePause()"
+                        >
+                            {{ game.isPaused ? "Resume" : "Pause" }}
+                        </button>
                         <button class="btn btn-danger btn-sm" @click="abandon">
                             Give Up
                         </button>
@@ -203,6 +222,46 @@ const difficultyColors: Record<string, string> = {
     align-items: flex-start;
 }
 
+.board-container {
+    position: relative;
+}
+
+.pause-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    z-index: 10;
+}
+
+.pause-content {
+    text-align: center;
+    color: #fff;
+}
+
+.pause-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+}
+
+.pause-overlay h3 {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+}
+
+.pause-overlay p {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
 .game-sidebar {
     display: flex;
     flex-direction: column;
@@ -211,6 +270,7 @@ const difficultyColors: Record<string, string> = {
 
 .game-actions {
     display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 

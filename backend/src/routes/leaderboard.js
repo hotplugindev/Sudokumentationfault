@@ -12,14 +12,18 @@ router.use(authenticate);
 /*  Query params:                                                      */
 /*    ?difficulty=easy|medium|hard|expert  (optional filter)            */
 /*    ?limit=50                           (optional, default 50)       */
+/*    ?mode=global|daily                  (optional, default global)  */
 /* ------------------------------------------------------------------ */
 
 router.get("/", async (req, res) => {
   try {
-    const { difficulty, limit } = req.query;
+    const { difficulty, limit, mode } = req.query;
     const parsedLimit = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 100);
+    const leaderboardMode = mode === "daily" ? "daily" : "global";
 
-    const entries = await store.getLeaderboard(difficulty || null, parsedLimit);
+    const entries = leaderboardMode === "daily"
+      ? await store.getDailyLeaderboard(difficulty || null, parsedLimit)
+      : await store.getLeaderboard(difficulty || null, parsedLimit);
 
     return res.status(200).json({ entries });
   } catch (err) {

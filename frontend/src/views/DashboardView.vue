@@ -25,6 +25,7 @@ interface UserStats {
 }
 
 const activeTab = ref<string>("all");
+const leaderboardMode = ref<"global" | "daily">("global");
 const leaderboard = ref<LeaderboardEntry[]>([]);
 const myStats = ref<UserStats | null>(null);
 const loadingBoard = ref(false);
@@ -48,7 +49,10 @@ function formatTime(seconds: number): string {
 async function fetchLeaderboard(difficulty?: string) {
     loadingBoard.value = true;
     try {
-        const params = difficulty && difficulty !== "all" ? { difficulty } : {};
+        const params: Record<string, string> = { mode: leaderboardMode.value };
+        if (difficulty && difficulty !== "all") {
+            params.difficulty = difficulty;
+        }
         const { data } = await api.get("/leaderboard", { params });
         leaderboard.value = data.entries;
     } catch (err) {
@@ -73,6 +77,11 @@ async function fetchMyStats() {
 function switchTab(tab: string) {
     activeTab.value = tab;
     fetchLeaderboard(tab);
+}
+
+function switchMode(mode: "global" | "daily") {
+    leaderboardMode.value = mode;
+    fetchLeaderboard(activeTab.value);
 }
 
 onMounted(() => {
@@ -154,7 +163,25 @@ onMounted(() => {
 
         <!-- Leaderboard -->
         <section class="leaderboard-section">
-            <h3 class="section-title">Global Leaderboard</h3>
+            <div class="leaderboard-header">
+                <h3 class="section-title">Leaderboard</h3>
+                <div class="mode-toggle">
+                    <button
+                        class="mode-btn"
+                        :class="{ 'mode-btn--active': leaderboardMode === 'global' }"
+                        @click="switchMode('global')"
+                    >
+                        Global
+                    </button>
+                    <button
+                        class="mode-btn"
+                        :class="{ 'mode-btn--active': leaderboardMode === 'daily' }"
+                        @click="switchMode('daily')"
+                    >
+                        Daily
+                    </button>
+                </div>
+            </div>
 
             <div class="tabs">
                 <button
@@ -324,7 +351,45 @@ onMounted(() => {
 .mono {
     font-family: var(--font-mono);
 }
+/* ── Leaderboard header ─────────────────────────────────────── */
 
+.leaderboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.mode-toggle {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+}
+
+.mode-btn {
+    padding: 4px 16px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: var(--font-sans);
+}
+
+.mode-btn:hover {
+    color: var(--text-primary);
+}
+
+.mode-btn--active {
+    background: var(--accent);
+    color: #fff;
+}
 /* ── Tabs ────────────────────────────────────────────────────────────── */
 
 .tabs {

@@ -21,6 +21,13 @@ function handleKeyDown(e: KeyboardEvent) {
         return;
     }
 
+    // Toggle grey-out with G
+    if (e.key === "g" || e.key === "G") {
+        e.preventDefault();
+        game.toggleGreyOutCompleted();
+        return;
+    }
+
     // Number keys 1-9
     if (e.key >= "1" && e.key <= "9") {
         const value = parseInt(e.key, 10);
