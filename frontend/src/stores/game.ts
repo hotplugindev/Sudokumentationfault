@@ -62,6 +62,54 @@ export const useGameStore = defineStore("game", () => {
     () => status.value === "completed" || status.value === "abandoned",
   );
 
+  /* ── Completed rows/cols/boxes ─────────────────────────────────────── */
+
+  function isRowComplete(row: number): boolean {
+    const seen = new Set<number>();
+    for (let col = 0; col < 9; col++) {
+      const val = current.value[row]?.[col];
+      if (!val || val === 0) return false;
+      if (seen.has(val)) return false;
+      seen.add(val);
+    }
+    return seen.size === 9;
+  }
+
+  function isColComplete(col: number): boolean {
+    const seen = new Set<number>();
+    for (let row = 0; row < 9; row++) {
+      const val = current.value[row]?.[col];
+      if (!val || val === 0) return false;
+      if (seen.has(val)) return false;
+      seen.add(val);
+    }
+    return seen.size === 9;
+  }
+
+  function isBoxComplete(boxRow: number, boxCol: number): boolean {
+    const seen = new Set<number>();
+    const startRow = boxRow * 3;
+    const startCol = boxCol * 3;
+    for (let r = startRow; r < startRow + 3; r++) {
+      for (let c = startCol; c < startCol + 3; c++) {
+        const val = current.value[r]?.[c];
+        if (!val || val === 0) return false;
+        if (seen.has(val)) return false;
+        seen.add(val);
+      }
+    }
+    return seen.size === 9;
+  }
+
+  function isCellInCompletedRegion(row: number, col: number): boolean {
+    if (isRowComplete(row)) return true;
+    if (isColComplete(col)) return true;
+    const boxRow = Math.floor(row / 3);
+    const boxCol = Math.floor(col / 3);
+    if (isBoxComplete(boxRow, boxCol)) return true;
+    return false;
+  }
+
   /* ── Notes helpers ─────────────────────────────────────────────────── */
 
   function toggleNote(row: number, col: number, num: number) {
@@ -200,5 +248,6 @@ export const useGameStore = defineStore("game", () => {
     clearNotes,
     getNotes,
     togglePencilMode,
+    isCellInCompletedRegion,
   };
 });

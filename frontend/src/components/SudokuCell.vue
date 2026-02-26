@@ -43,6 +43,10 @@ const isSameValue = computed(() => {
     return selVal !== 0 && selVal === value.value;
 });
 
+const isInCompletedRegion = computed(() => 
+    game.isCellInCompletedRegion(props.row, props.col)
+);
+
 /* Right & bottom thick borders for 3x3 box separation */
 const thickRight = computed(() => props.col === 2 || props.col === 5);
 const thickBottom = computed(() => props.row === 2 || props.row === 5);
@@ -68,6 +72,7 @@ function onClick() {
             'cell--same-value': isSameValue && !isSelected,
             'cell--thick-right': thickRight,
             'cell--thick-bottom': thickBottom,
+            'cell--completed': isInCompletedRegion,
         }"
         @click="onClick"
     >
@@ -135,6 +140,10 @@ function onClick() {
 
 .cell--thick-bottom {
     border-bottom: 2px solid var(--text-muted);
+}
+
+.cell--completed {
+    opacity: 0.4;
 }
 
 .cell-value {
