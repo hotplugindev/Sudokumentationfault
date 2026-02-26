@@ -37,7 +37,8 @@ function getMissingCount(num: number): number {
     let count = 0;
     for (let row = 0; row < 9; row++) {
         for (let col = 0; col < 9; col++) {
-            if (game.current[row]?.[col] === num) {
+            const cell = game.current[row]?.[col];
+            if (cell && cell === num) {
                 count++;
             }
         }
