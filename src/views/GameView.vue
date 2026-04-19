@@ -6,6 +6,7 @@ import SudokuBoard from "@/components/SudokuBoard.vue";
 import NumberPad from "@/components/NumberPad.vue";
 import DifficultySelector from "@/components/DifficultySelector.vue";
 import { getInProgressSavedGames, type SavedGameState } from "@/lib/localDb";
+import { formatDate, formatTime } from "@/lib/utils";
 
 const game = useGameStore();
 const router = useRouter();
@@ -53,21 +54,6 @@ const difficultyColors: Record<string, string> = {
   hard: "#f87171",
   expert: "#c084fc",
 };
-
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-}
-
-function formatDate(ts: number): string {
-  return new Date(ts).toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 onMounted(() => {
   loadSavedGames();
