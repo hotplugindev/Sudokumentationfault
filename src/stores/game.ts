@@ -3,6 +3,9 @@ import { computed, reactive, ref } from "vue";
 import {
   addGameRecord,
   addLeaderboardEntry,
+  deleteSavedGame,
+  loadGameState,
+  saveGameState,
   updateGameRecord,
 } from "@/lib/localDb";
 import {
@@ -29,6 +32,7 @@ export const useGameStore = defineStore("game", () => {
   const locked = ref<boolean[][]>([]);
   const status = ref<GameStatus>("idle");
   const elapsed = ref(0);
+  const startedAt = ref(0);
   const selectedCell = ref<{ row: number; col: number } | null>(null);
   const completedAt = ref<number | null>(null);
   const isPaused = ref(false);
@@ -38,12 +42,34 @@ export const useGameStore = defineStore("game", () => {
   const notes = reactive<Set<number>[][]>(createEmptyNotes());
 
   let timerInterval: ReturnType<typeof setInterval> | null = null;
+  let saveTickCount = 0;
+
+  function persistState() {
+    if (!gameId.value || status.value !== "in_progress") return;
+    saveGameState({
+      id: gameId.value,
+      difficulty: difficulty.value,
+      puzzle: cloneGrid(puzzle.value),
+      solution: cloneGrid(solution.value),
+      current: cloneGrid(current.value),
+      locked: locked.value.map((row) => [...row]),
+      elapsed: elapsed.value,
+      startedAt: startedAt.value,
+      notes: notes.map((row) => row.map((cell) => [...cell])),
+    });
+  }
 
   function startTimer() {
     stopTimer();
+    saveTickCount = 0;
     timerInterval = setInterval(() => {
       if (status.value === "in_progress" && !isPaused.value) {
         elapsed.value++;
+        saveTickCount++;
+        if (saveTickCount >= 30) {
+          persistState();
+          saveTickCount = 0;
+        }
       }
     }, 1000);
   }
@@ -166,6 +192,7 @@ export const useGameStore = defineStore("game", () => {
     locked.value = game.locked;
     status.value = "in_progress";
     elapsed.value = 0;
+    startedAt.value = now;
     selectedCell.value = null;
     completedAt.value = null;
     pencilMode.value = false;
@@ -182,6 +209,7 @@ export const useGameStore = defineStore("game", () => {
     });
 
     startTimer();
+    persistState();
 
     return {
       id,
@@ -220,6 +248,8 @@ export const useGameStore = defineStore("game", () => {
         completedAt: doneAt,
       });
 
+      deleteSavedGame(gameId.value);
+
       addLeaderboardEntry({
         gameId: gameId.value,
         difficulty: difficulty.value,
@@ -237,6 +267,8 @@ export const useGameStore = defineStore("game", () => {
     updateGameRecord(gameId.value, {
       elapsed: elapsed.value,
     });
+
+    persistState();
 
     return {
       current: cloneGrid(current.value),
@@ -259,6 +291,8 @@ export const useGameStore = defineStore("game", () => {
       elapsed: elapsed.value,
       completedAt: completedAt.value,
     });
+
+    deleteSavedGame(gameId.value);
 
     return {
       status: "abandoned" as const,
@@ -290,6 +324,9 @@ export const useGameStore = defineStore("game", () => {
 
   function reset() {
     stopTimer();
+    if (gameId.value && status.value === "in_progress") {
+      deleteSavedGame(gameId.value);
+    }
     gameId.value = null;
     puzzle.value = [];
     solution.value = [];
@@ -297,11 +334,43 @@ export const useGameStore = defineStore("game", () => {
     locked.value = [];
     status.value = "idle";
     elapsed.value = 0;
+    startedAt.value = 0;
     selectedCell.value = null;
     completedAt.value = null;
     pencilMode.value = false;
     isPaused.value = false;
     clearAllNotes();
+  }
+
+  async function resumeSavedGame(id: string) {
+    const state = loadGameState(id);
+    if (!state) return;
+
+    stopTimer();
+
+    gameId.value = state.id;
+    difficulty.value = state.difficulty;
+    puzzle.value = cloneGrid(state.puzzle);
+    solution.value = cloneGrid(state.solution);
+    current.value = cloneGrid(state.current);
+    locked.value = state.locked.map((row) => [...row]);
+    status.value = "in_progress";
+    elapsed.value = state.elapsed;
+    startedAt.value = state.startedAt;
+    selectedCell.value = null;
+    completedAt.value = null;
+    pencilMode.value = false;
+    isPaused.value = false;
+
+    clearAllNotes();
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        const savedNotes = state.notes[r]?.[c] ?? [];
+        savedNotes.forEach((n) => notes[r]![c]!.add(n));
+      }
+    }
+
+    startTimer();
   }
 
   return {
@@ -312,6 +381,7 @@ export const useGameStore = defineStore("game", () => {
     locked,
     status,
     elapsed,
+    startedAt,
     selectedCell,
     completedAt,
     pencilMode,
@@ -325,6 +395,7 @@ export const useGameStore = defineStore("game", () => {
     abandonGame,
     selectCell,
     reset,
+    resumeSavedGame,
     toggleNote,
     clearNotes,
     getNotes,

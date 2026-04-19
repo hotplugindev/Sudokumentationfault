@@ -1,15 +1,22 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useGameStore } from "@/stores/game";
 import type { Difficulty } from "@/lib/sudoku";
 import {
   getGameHistory,
+  getInProgressSavedGames,
   getUserStats,
   queryLeaderboard,
   type GameHistoryEntry,
   type LeaderboardMode,
   type LocalLeaderboardEntry,
+  type SavedGameState,
   type UserStats,
 } from "@/lib/localDb";
+
+const router = useRouter();
+const game = useGameStore();
 
 const activeTab = ref<string>("all");
 const leaderboardMode = ref<LeaderboardMode>("global");
@@ -17,6 +24,7 @@ const leaderboard = ref<LocalLeaderboardEntry[]>([]);
 const history = ref<GameHistoryEntry[]>([]);
 const myStats = ref<UserStats | null>(null);
 const loadingBoard = ref(false);
+const inProgressGames = ref<SavedGameState[]>([]);
 
 const difficulties = ["all", "easy", "medium", "hard", "expert"];
 const statDifficulties: Difficulty[] = ["easy", "medium", "hard", "expert"];
@@ -62,6 +70,12 @@ function fetchLeaderboard(difficulty?: string) {
 function fetchDashboardData() {
   myStats.value = getUserStats();
   history.value = getGameHistory(60);
+  inProgressGames.value = getInProgressSavedGames();
+}
+
+async function continueGame(id: string) {
+  await game.resumeSavedGame(id);
+  router.push("/");
 }
 
 function switchTab(tab: string) {
@@ -91,6 +105,27 @@ onMounted(() => {
       </div>
       <RouterLink class="btn btn-primary" to="/">Start New Puzzle</RouterLink>
     </header>
+
+    <section v-if="inProgressGames.length > 0" class="in-progress-section card">
+      <h3 class="section-title section-title--compact">Continue Playing</h3>
+      <ul class="in-progress-list">
+        <li v-for="sg in inProgressGames" :key="sg.id" class="in-progress-item">
+          <div class="in-progress-info">
+            <span
+              class="difficulty-pill"
+              :style="{ color: difficultyColors[sg.difficulty], borderColor: difficultyColors[sg.difficulty] }"
+            >
+              {{ sg.difficulty }}
+            </span>
+            <span class="history-time mono">{{ formatTime(sg.elapsed) }}</span>
+            <span class="history-date">{{ formatDate(sg.startedAt) }}</span>
+          </div>
+          <button class="btn btn-primary btn-sm" @click="continueGame(sg.id)">
+            Continue Playing
+          </button>
+        </li>
+      </ul>
+    </section>
 
     <section class="stats-section" v-if="myStats">
       <h3 class="section-title">Overview</h3>
@@ -380,6 +415,36 @@ onMounted(() => {
   padding: 14px;
 }
 
+.in-progress-section {
+  padding: 14px;
+}
+
+.in-progress-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.in-progress-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-sm);
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.in-progress-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .history-header {
   display: flex;
   align-items: center;
@@ -593,6 +658,15 @@ onMounted(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+
+  .in-progress-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .in-progress-item .btn {
+    width: 100%;
   }
 
   .history-main,
