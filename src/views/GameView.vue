@@ -1,16 +1,23 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useGameStore } from "@/stores/game";
 import SudokuBoard from "@/components/SudokuBoard.vue";
 import NumberPad from "@/components/NumberPad.vue";
 import DifficultySelector from "@/components/DifficultySelector.vue";
+import { getInProgressSavedGames, type SavedGameState } from "@/lib/localDb";
+import { formatDate, formatTime } from "@/lib/utils";
 
 const game = useGameStore();
 const router = useRouter();
 const loading = ref(false);
+const savedGames = ref<SavedGameState[]>([]);
 
 const isPlayingView = computed(() => game.status !== "idle");
+
+function loadSavedGames() {
+  savedGames.value = getInProgressSavedGames();
+}
 
 async function startGame(difficulty: string) {
   loading.value = true;
@@ -23,6 +30,10 @@ async function startGame(difficulty: string) {
   }
 }
 
+async function continueGame(id: string) {
+  await game.resumeSavedGame(id);
+}
+
 async function abandon() {
   if (!confirm("Are you sure you want to give up?")) return;
   await game.abandonGame();
@@ -30,6 +41,7 @@ async function abandon() {
 
 function newGameFromFinish() {
   game.reset();
+  loadSavedGames();
 }
 
 function goToDashboard() {
@@ -42,6 +54,10 @@ const difficultyColors: Record<string, string> = {
   hard: "#f87171",
   expert: "#c084fc",
 };
+
+onMounted(() => {
+  loadSavedGames();
+});
 </script>
 
 <template>
@@ -50,6 +66,27 @@ const difficultyColors: Record<string, string> = {
       <h2 class="page-title">New Game</h2>
       <p class="page-subtitle">Choose your challenge and begin.</p>
       <DifficultySelector :loading="loading" @select="startGame" />
+    </section>
+
+    <section v-if="game.status === 'idle' && savedGames.length > 0" class="saved-games card">
+      <h3 class="saved-games-title">Continue a Game</h3>
+      <ul class="saved-games-list">
+        <li v-for="sg in savedGames" :key="sg.id" class="saved-game-item">
+          <div class="saved-game-info">
+            <span
+              class="difficulty-pill"
+              :style="{ color: difficultyColors[sg.difficulty], borderColor: difficultyColors[sg.difficulty] }"
+            >
+              {{ sg.difficulty }}
+            </span>
+            <span class="saved-game-time mono">{{ formatTime(sg.elapsed) }}</span>
+            <span class="saved-game-date">{{ formatDate(sg.startedAt) }}</span>
+          </div>
+          <button class="btn btn-primary btn-sm" @click="continueGame(sg.id)">
+            Continue
+          </button>
+        </li>
+      </ul>
     </section>
 
     <section v-else class="play-shell">
@@ -176,6 +213,64 @@ const difficultyColors: Record<string, string> = {
   display: grid;
   gap: 10px;
   padding: 24px;
+}
+
+.saved-games {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  padding: 18px 20px;
+}
+
+.saved-games-title {
+  font-size: 1rem;
+  margin-bottom: 12px;
+}
+
+.saved-games-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.saved-game-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--radius-sm);
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.saved-game-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.saved-game-time {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.saved-game-date {
+  font-size: 0.78rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+@media (max-width: 480px) {
+  .saved-game-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .saved-game-item .btn {
+    width: 100%;
+  }
 }
 
 .page-title {

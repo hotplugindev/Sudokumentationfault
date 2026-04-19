@@ -40,9 +40,22 @@ export interface GameHistoryEntry {
   completedAt: number | null;
 }
 
+export interface SavedGameState {
+  id: string;
+  difficulty: Difficulty;
+  puzzle: number[][];
+  solution: number[][];
+  current: number[][];
+  locked: boolean[][];
+  elapsed: number;
+  startedAt: number;
+  notes: number[][][];
+}
+
 const STORAGE_KEYS = {
   gameRecords: "sudoku.gameRecords",
   leaderboard: "sudoku.leaderboard",
+  savedStates: "sudoku.savedStates",
 } as const;
 
 const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard", "expert"];
@@ -190,4 +203,32 @@ export function getGameHistory(limit = 40): GameHistoryEntry[] {
       startedAt: record.startedAt,
       completedAt: record.completedAt,
     }));
+}
+
+function getSavedStates(): Record<string, SavedGameState> {
+  return readJson<Record<string, SavedGameState>>(STORAGE_KEYS.savedStates, {});
+}
+
+function writeSavedStates(states: Record<string, SavedGameState>) {
+  writeJson(STORAGE_KEYS.savedStates, states);
+}
+
+export function saveGameState(state: SavedGameState) {
+  const states = getSavedStates();
+  states[state.id] = state;
+  writeSavedStates(states);
+}
+
+export function loadGameState(id: string): SavedGameState | null {
+  return getSavedStates()[id] ?? null;
+}
+
+export function getInProgressSavedGames(): SavedGameState[] {
+  return Object.values(getSavedStates()).sort((a, b) => b.startedAt - a.startedAt);
+}
+
+export function deleteSavedGame(id: string) {
+  const states = getSavedStates();
+  delete states[id];
+  writeSavedStates(states);
 }
