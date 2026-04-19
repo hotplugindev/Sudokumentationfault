@@ -89,7 +89,7 @@ onMounted(() => {
       </ul>
     </section>
 
-    <section v-else class="play-shell">
+    <section v-else-if="game.status !== 'idle'" class="play-shell">
       <header class="play-hud card">
         <div class="hud-chip">
           <span class="hud-chip__label">Difficulty</span>
